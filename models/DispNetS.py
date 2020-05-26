@@ -6,9 +6,9 @@ from torch.nn.init import xavier_uniform_, zeros_
 
 def downsample_conv(in_planes, out_planes, kernel_size=3):
     return nn.Sequential(
-        nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=2, padding=(kernel_size-1)//2),
+        nn.Conv2d(in_planes, out_planes, kernel_size=kernel_size, stride=2, padding=(kernel_size - 1) // 2),
         nn.ReLU(inplace=True),
-        nn.Conv2d(out_planes, out_planes, kernel_size=kernel_size, padding=(kernel_size-1)//2),
+        nn.Conv2d(out_planes, out_planes, kernel_size=kernel_size, padding=(kernel_size - 1) // 2),
         nn.ReLU(inplace=True)
     )
 
@@ -35,7 +35,7 @@ def upconv(in_planes, out_planes):
 
 
 def crop_like(input, ref):
-    assert(input.size(2) >= ref.size(2) and input.size(3) >= ref.size(3))
+    assert (input.size(2) >= ref.size(2) and input.size(3) >= ref.size(3))
     return input[:, :, :ref.size(2), :ref.size(3)]
 
 
@@ -48,7 +48,7 @@ class DispNetS(nn.Module):
         self.beta = beta
 
         conv_planes = [32, 64, 128, 256, 512, 512, 512]
-        self.conv1 = downsample_conv(3,              conv_planes[0], kernel_size=7)
+        self.conv1 = downsample_conv(3, conv_planes[0], kernel_size=7)
         self.conv2 = downsample_conv(conv_planes[0], conv_planes[1], kernel_size=5)
         self.conv3 = downsample_conv(conv_planes[1], conv_planes[2])
         self.conv4 = downsample_conv(conv_planes[2], conv_planes[3])
@@ -57,7 +57,7 @@ class DispNetS(nn.Module):
         self.conv7 = downsample_conv(conv_planes[5], conv_planes[6])
 
         upconv_planes = [512, 512, 256, 128, 64, 32, 16]
-        self.upconv7 = upconv(conv_planes[6],   upconv_planes[0])
+        self.upconv7 = upconv(conv_planes[6], upconv_planes[0])
         self.upconv6 = upconv(upconv_planes[0], upconv_planes[1])
         self.upconv5 = upconv(upconv_planes[1], upconv_planes[2])
         self.upconv4 = upconv(upconv_planes[2], upconv_planes[3])
@@ -129,7 +129,4 @@ class DispNetS(nn.Module):
         out_iconv1 = self.iconv1(concat1)
         disp1 = self.alpha * self.predict_disp1(out_iconv1) + self.beta
 
-        if self.training:
-            return disp1, disp2, disp3, disp4
-        else:
-            return disp1
+        return [disp1, disp2, disp3, disp4]
