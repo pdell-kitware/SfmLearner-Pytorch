@@ -13,10 +13,10 @@ def downsample_conv(in_planes, out_planes, kernel_size=3):
     )
 
 
-def predict_disp(in_planes):
+def predict_disp(in_planes, activation: nn.Module = nn.Sigmoid()):
     return nn.Sequential(
         nn.Conv2d(in_planes, 1, kernel_size=3, padding=1),
-        nn.Sigmoid()
+        activation
     )
 
 
@@ -41,7 +41,7 @@ def crop_like(input, ref):
 
 class DispNetS(nn.Module):
 
-    def __init__(self, alpha=10, beta=0.01):
+    def __init__(self, alpha=10, beta=0.01, prediction_activation: nn.Module = nn.Sigmoid()):
         super(DispNetS, self).__init__()
 
         self.alpha = alpha
@@ -73,10 +73,12 @@ class DispNetS(nn.Module):
         self.iconv2 = conv(1 + upconv_planes[5] + conv_planes[0], upconv_planes[5])
         self.iconv1 = conv(1 + upconv_planes[6], upconv_planes[6])
 
-        self.predict_disp4 = predict_disp(upconv_planes[3])
-        self.predict_disp3 = predict_disp(upconv_planes[4])
-        self.predict_disp2 = predict_disp(upconv_planes[5])
-        self.predict_disp1 = predict_disp(upconv_planes[6])
+        self.predict_disp4 = predict_disp(upconv_planes[3], prediction_activation)
+        self.predict_disp3 = predict_disp(upconv_planes[4], prediction_activation)
+        self.predict_disp2 = predict_disp(upconv_planes[5], prediction_activation)
+        self.predict_disp1 = predict_disp(upconv_planes[6], prediction_activation)
+
+        self.init_weights()
 
     def init_weights(self):
         for m in self.modules():
